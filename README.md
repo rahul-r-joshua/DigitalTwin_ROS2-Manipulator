@@ -100,7 +100,7 @@ Before running any control mode, upload the firmware to your Arduino:
 > **Important:** Make sure the **Arduino IDE is completely closed** before proceeding. 🛑
 > This prevents the IDE from locking the serial port while testing or running ROS 2 nodes.
 
-### 1️⃣🔗 Connect the Arduino
+### 1️⃣ Connect the Arduino
 
 Connect the Arduino to the computer using a USB cable. 🔌
 
@@ -127,7 +127,7 @@ or
 
 ---
 
-### 2️⃣🕵️ If the Arduino Is Not Detected
+### 2️⃣ If the Arduino Is Not Detected
 
 If neither `/dev/ttyUSB*` nor `/dev/ttyACM*` appears, monitor the Linux kernel messages. 🧠
 
@@ -162,7 +162,7 @@ to stop monitoring. 🛑
 
 ---
 
-### 3️⃣🧩 Fix BRLTTY-Related Serial Port Issues
+### 3️⃣ Fix BRLTTY-Related Serial Port Issues
 
 On some Ubuntu systems, `brltty` may interfere with certain USB-to-serial devices. ⚠️
 
@@ -183,7 +183,7 @@ ls /dev/ttyACM*
 
 ---
 
-### 4️⃣🔐 Grant Serial Port Permissions
+### 4️⃣ Grant Serial Port Permissions
 
 Linux serial devices are commonly controlled through the `dialout` group. 👥
 
@@ -205,7 +205,7 @@ You should see:
 dialout
 ```
 
-### 5️⃣🔄 Apply the Group Permission
+### 5️⃣ Apply the Group Permission
 
 The new group membership normally takes effect after logging out and logging back in. 🚪
 
@@ -230,7 +230,7 @@ ls /dev/ttyACM*
 
 ---
 
-### 6️⃣✅ Verify the Arduino Device
+### 6️⃣ Verify the Arduino Device
 
 If the Arduino is detected correctly, one of the following devices should normally appear: 🎉
 
@@ -258,7 +258,7 @@ dmesg | grep -E "ttyUSB|ttyACM"
 
 ---
 
-### 7️⃣📋 Quick Troubleshooting Checklist
+### 7️⃣ Quick Troubleshooting Checklist
 
 | Check                         | Command                              |
 | ----------------------------- | ------------------------------------ |
@@ -274,7 +274,7 @@ dmesg | grep -E "ttyUSB|ttyACM"
 
 ---
 
-### 8️⃣🎯 Expected Result
+### 8️⃣ Expected Result
 
 Once the Arduino is correctly connected and permissions are configured, running: ✨
 
@@ -412,42 +412,40 @@ ros2 launch arduinobot_firmware moveit_digitaltwin.launch.py port:=/dev/ttyACM0
 > ⚠️ **Important:** Every time you change the **Planning Group** (arm ↔ gripper), you must re-verify that **OMPL** is selected in the **Context** tab. MoveIt may reset the planning library when switching groups!
 
 ### 5️⃣ Plan and Execute the Trajectory
-| Check USB serial devices      | `ls /dev/ttyUSB*`                   |
-| Check ACM serial devices      | `ls /dev/ttyACM*`                   |
-| Monitor kernel messages       | `sudo dmesg -w`                     |
-| Check USB devices             | `lsusb`                             |
-| Check Arduino serial messages | `dmesg \| grep -E "ttyUSB\|ttyACM"` |
-| Remove BRLTTY                 | `sudo apt remove brltty`            |
-| Add user to serial group      | `sudo usermod -aG dialout $USER`    |
-| Check user groups             | `groups`                            |
-| Reboot system                 | `sudo reboot`                       |
 
----
+**For ARM Control:**
+1. In the Planning panel → **Planning Group:** Select `arm`
+2. Move the **Interactive Markers** in RViz to your desired end-effector position
+3. Click **Plan** to generate a collision-free trajectory
+4. Visualize the planned path in RViz (it will show in a different color)
+5. Click **Execute** to move the robot to the goal position
 
-### 8. Expected Result
+**For GRIPPER Control:**
+1. In the Planning panel → **Planning Group:** Select `gripper`
+2. Set **Start State:** `home`
+3. Set **Goal State:** Click `Random Valid` to generate random valid gripper positions
+4. Click **Plan** and **Execute** to move the gripper
 
-Once the Arduino is correctly connected and permissions are configured, running:
+### 6️⃣ Joint State Control (Alternative)
+- **Random Valid:** Click to move to a random valid configuration
+- **Goal State:** Customize joint angles as desired
+- Both `arm` and `gripper` groups support random state generation
 
-```bash
-ls /dev/ttyUSB*
-ls /dev/ttyACM*
-```
+### 💡 Tips
+- Make sure the hardware bringup is running before launching MoveIt
+- Always visualize the planned trajectory in RViz **before executing** on real hardware
+- If the robot doesn't move after clicking Execute, check:
+  - ✅ Hardware is powered on
+  - ✅ Correct controllers are active
+  - ✅ Arduino connection is stable
+- You can switch between `arm` and `gripper` planning groups to control different parts
+- Use **Approximate IK** for faster planning if exact IK solutions are not needed
 
-should return a device such as:
-
-```text
-/dev/ttyACM0
-```
-
-or
-
-```text
-/dev/ttyUSB0
-```
-
-This serial device can then be used by your **ROS 2 nodes, Arduino communication scripts, or other serial-based applications**.
-
-> **Tip:** If the Arduino is still not detected after following these steps, try a different USB cable, USB port, or USB-to-serial adapter. Some USB cables are designed only for charging and do not provide data communication.
+> ⚠️ **Hardware Reachability Note:** Due to physical motor limits, the hardware robot cannot reach some positions that MoveIt plans in RViz. MoveIt's IK solver may generate valid mathematical solutions that exceed the actual motor range or mechanical constraints of your specific hardware. If the robot doesn't move to a planned position, try:
+> - Planning to a closer position
+> - Using smaller movements
+> - Checking that the target is within the physical workspace
+> - Verifying joint limits in `joint_limits.yaml` match your hardware capabilities
 
 ## 🛠️ Troubleshooting
 
