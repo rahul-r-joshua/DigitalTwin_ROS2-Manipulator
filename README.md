@@ -64,7 +64,7 @@ chmod +x *.sh
 ```bash
 sudo apt update && sudo apt install -y ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial libserial-dev
 ```
-5️⃣ **Build the workspace:**5️
+5️⃣ **Build the workspace:**
 ```bash
 colcon build --symlink-install
 source install/setup.bash
