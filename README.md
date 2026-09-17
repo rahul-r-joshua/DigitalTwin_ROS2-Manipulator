@@ -59,16 +59,18 @@ chmod +x *.sh
 ```
 > ⚠️ **Important:** The `.` at the end clones the repo directly into your current directory. The `chmod` command makes all shell scripts executable.
 
-4️⃣ **Build the workspace:**
+
+4️⃣ **Install additional dependencies:**
+```bash
+sudo apt update && sudo apt install -y ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial libserial-dev
+```
+5️⃣ **Build the workspace:**5️
 ```bash
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-5️⃣ **Install additional dependencies:**
-```bash
-sudo apt install ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial
-```
+
 
 ---
 
