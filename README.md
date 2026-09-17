@@ -1,9 +1,9 @@
-# 🤖 DigitalTwin ROS2 + Manipulator
+# 🤖 DigitalTwin ROS 2 + Manipulator
 
-A complete ROS 2 framework for controlling a robotic manipulator with Arduino hardware integration, featuring FK/IK control modes and MoveIt planning capabilities.
+A complete ROS 2 digital twin for a robotic manipulator with Arduino hardware integration, featuring FK/IK control modes, MoveIt planning, and flexible joystick/GUI control.
 
 ## 🦾 Project Overview
-This project integrates a robotic manipulator with ROS 2, using an Arduino for hardware communication. It provides both Forward Kinematics (FK) and Inverse Kinematics (IK) control, with MoveIt for planning and visualization. You can control the manipulator via a joystick or a GUI, and visualize its state in RViz.
+This project integrates a robotic manipulator with ROS 2, using an Arduino for hardware communication. It supports Forward Kinematics (FK) and Inverse Kinematics (IK) control, with MoveIt for planning and visualization. You can control the manipulator via a joystick or a GUI, and visualize its state in `RViz`.
 
 **Key Highlights:**
 - 🔀 Seamless switching between control modes (FK Joystick, FK GUI, IK MoveIt)
@@ -62,15 +62,13 @@ chmod +x *.sh
 
 4️⃣ **Install additional dependencies:**
 ```bash
-sudo apt update && sudo apt install -y python3-rosdep2 ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial libserial-dev ros-humble-ros-gz-sim ros-humble-ros-gz && cd ~/digitaltwin_ws && rosdep update && rosdep install --from-paths src --ignore-src -r -y && source /opt/ros/humble/setup.bash && source ~/digitaltwin_ws/install/setup.bash
+sudo apt update && sudo apt install -y python3-rosdep2 joystick ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial libserial-dev ros-humble-ros-gz-sim ros-humble-ros-gz && cd ~/digitaltwin_ws && rosdep update && rosdep install --from-paths src --ignore-src -r -y && source /opt/ros/humble/setup.bash && source ~/digitaltwin_ws/install/setup.bash
 ```
 5️⃣ **Build the workspace:**
 ```bash
 colcon build --symlink-install
 source install/setup.bash
 ```
-
-
 
 ---
 
@@ -97,6 +95,210 @@ Before running any control mode, upload the firmware to your Arduino:
 
 ---
 
+## ⚠️🔌 Arduino Serial Port Setup & Troubleshooting
+
+> **Important:** Make sure the **Arduino IDE is completely closed** before proceeding. 🛑
+> This prevents the IDE from locking the serial port while testing or running ROS 2 nodes.
+
+### 1️⃣🔗 Connect the Arduino
+
+Connect the Arduino to the computer using a USB cable. 🔌
+
+Then check whether the system detects the serial device: 👇
+
+```bash
+ls /dev/ttyUSB*
+ls /dev/ttyACM*
+```
+
+Typical Arduino serial devices are:
+
+```text
+/dev/ttyUSB0
+```
+
+or
+
+```text
+/dev/ttyACM0
+```
+
+> **Note:** If you see `No such file or directory`, it simply means that no device matching that pattern is currently detected. ✅
+
+---
+
+### 2️⃣🕵️ If the Arduino Is Not Detected
+
+If neither `/dev/ttyUSB*` nor `/dev/ttyACM*` appears, monitor the Linux kernel messages. 🧠
+
+Run:
+
+```bash
+sudo dmesg -w
+```
+
+Now: 🔄
+
+1. Disconnect the Arduino USB cable.
+2. Reconnect the Arduino.
+3. Observe the messages printed in the terminal.
+4. Look for messages containing keywords such as:
+
+  * `USB`
+  * `ttyACM`
+  * `ttyUSB`
+  * `serial`
+  * `brltty`
+  * `error`
+  * `disconnect`
+
+Press:
+
+```text
+Ctrl + C
+```
+
+to stop monitoring. 🛑
+
+---
+
+### 3️⃣🧩 Fix BRLTTY-Related Serial Port Issues
+
+On some Ubuntu systems, `brltty` may interfere with certain USB-to-serial devices. ⚠️
+
+If `dmesg` shows a **BRLTTY-related error**, remove the package:
+
+```bash
+sudo apt remove brltty
+```
+
+After removing `brltty`, disconnect and reconnect the Arduino. 🔁
+
+Then check the serial ports again:
+
+```bash
+ls /dev/ttyUSB*
+ls /dev/ttyACM*
+```
+
+---
+
+### 4️⃣🔐 Grant Serial Port Permissions
+
+Linux serial devices are commonly controlled through the `dialout` group. 👥
+
+Add the current user to the `dialout` group:
+
+```bash
+sudo usermod -aG dialout $USER
+```
+
+Verify the group membership:
+
+```bash
+groups
+```
+
+You should see:
+
+```text
+dialout
+```
+
+### 5️⃣🔄 Apply the Group Permission
+
+The new group membership normally takes effect after logging out and logging back in. 🚪
+
+Alternatively, reboot the system:
+
+```bash
+sudo reboot
+```
+
+After logging back in, verify:
+
+```bash
+groups
+```
+
+Then reconnect the Arduino and check:
+
+```bash
+ls /dev/ttyUSB*
+ls /dev/ttyACM*
+```
+
+---
+
+### 6️⃣✅ Verify the Arduino Device
+
+If the Arduino is detected correctly, one of the following devices should normally appear: 🎉
+
+```text
+/dev/ttyUSB0
+```
+
+or
+
+```text
+/dev/ttyACM0
+```
+
+You can also get more detailed information about the detected USB device using: 🔎
+
+```bash
+lsusb
+```
+
+For additional serial-port information:
+
+```bash
+dmesg | grep -E "ttyUSB|ttyACM"
+```
+
+---
+
+### 7️⃣📋 Quick Troubleshooting Checklist
+
+| Check                         | Command                              |
+| ----------------------------- | ------------------------------------ |
+| Check USB serial devices      | `ls /dev/ttyUSB*`                    |
+| Check ACM serial devices      | `ls /dev/ttyACM*`                    |
+| Monitor kernel messages       | `sudo dmesg -w`                      |
+| Check USB devices             | `lsusb`                              |
+| Check Arduino serial messages | `dmesg \| grep -E "ttyUSB\|ttyACM"` |
+| Remove BRLTTY                 | `sudo apt remove brltty`             |
+| Add user to serial group      | `sudo usermod -aG dialout $USER`     |
+| Check user groups             | `groups`                             |
+| Reboot system                 | `sudo reboot`                        |
+
+---
+
+### 8️⃣🎯 Expected Result
+
+Once the Arduino is correctly connected and permissions are configured, running: ✨
+
+```bash
+ls /dev/ttyUSB*
+ls /dev/ttyACM*
+```
+
+should return a device such as:
+
+```text
+/dev/ttyACM0
+```
+
+or
+
+```text
+/dev/ttyUSB0
+```
+
+This serial device can then be used by your **ROS 2 nodes, Arduino communication scripts, or other serial-based applications**. 🤖
+
+> **Tip:** If the Arduino is still not detected after following these steps, try a different USB cable, USB port, or USB-to-serial adapter. Some USB cables are designed only for charging and do not provide data communication. 🧪
+
 ## 🚀 How to Run
 
 ### 📦 Terminal 1: Launch Hardware Bringup (Required First)
@@ -118,6 +320,8 @@ lsusb # Look for your joystick (e.g., Xbox 360 Controller)
 
 #### ⚠️ Important
 Make sure Arduino IDE is closed before proceeding!
+
+
 
 #### 🎮 Terminal 2: Launch Joystick Control
 ```bash
@@ -208,42 +412,42 @@ ros2 launch arduinobot_firmware moveit_digitaltwin.launch.py port:=/dev/ttyACM0
 > ⚠️ **Important:** Every time you change the **Planning Group** (arm ↔ gripper), you must re-verify that **OMPL** is selected in the **Context** tab. MoveIt may reset the planning library when switching groups!
 
 ### 5️⃣ Plan and Execute the Trajectory
-
-**For ARM Control:**
-1. In Planning panel → **Planning Group:** Select `arm`
-2. Move the **Interactive Markers** in RViz to your desired end-effector position
-3. Click **Plan** to generate a collision-free trajectory
-4. Visualize the planned path in RViz (it will show in a different color)
-5. Click **Execute** to move the robot to the goal position
-
-**For GRIPPER Control:**
-1. In Planning panel → **Planning Group:** Select `gripper`
-2. Set **Start State:** `home`
-3. Set **Goal State:** Click `Random Valid` to generate random valid gripper positions
-4. Click **Plan** and **Execute** to move the gripper
-
-### 6️⃣ Joint State Control (Alternative)
-- **Random Valid:** Click to move to a random valid configuration
-- **Goal State:** Customize joint angles as desired
-- Both `arm` and `gripper` groups support random state generation
-
-### 💡 Tips
-- Make sure the hardware bringup is running before launching MoveIt
-- Always visualize the planned trajectory in RViz **before executing** on real hardware
-- If the robot doesn't move after clicking Execute, check:
-  - ✅ Hardware is powered on
-  - ✅ Correct controllers are active
-  - ✅ Arduino connection is stable
-- You can switch between `arm` and `gripper` planning groups to control different parts
-- Use **Approximate IK** for faster planning if exact IK solutions are not needed
-
-> ⚠️ **Hardware Reachability Note:** Due to physical motor limits, the hardware robot cannot reach some positions that MoveIt plans in RViz. MoveIt's IK solver may generate valid mathematical solutions that exceed the actual motor range or mechanical constraints of your specific hardware. If the robot doesn't move to a planned position, try:
-> - Planning to a closer position
-> - Using smaller movements
-> - Checking that the target is within the physical workspace
-> - Verifying joint limits in `joint_limits.yaml` match your hardware capabilities
+| Check USB serial devices      | `ls /dev/ttyUSB*`                   |
+| Check ACM serial devices      | `ls /dev/ttyACM*`                   |
+| Monitor kernel messages       | `sudo dmesg -w`                     |
+| Check USB devices             | `lsusb`                             |
+| Check Arduino serial messages | `dmesg \| grep -E "ttyUSB\|ttyACM"` |
+| Remove BRLTTY                 | `sudo apt remove brltty`            |
+| Add user to serial group      | `sudo usermod -aG dialout $USER`    |
+| Check user groups             | `groups`                            |
+| Reboot system                 | `sudo reboot`                       |
 
 ---
+
+### 8. Expected Result
+
+Once the Arduino is correctly connected and permissions are configured, running:
+
+```bash
+ls /dev/ttyUSB*
+ls /dev/ttyACM*
+```
+
+should return a device such as:
+
+```text
+/dev/ttyACM0
+```
+
+or
+
+```text
+/dev/ttyUSB0
+```
+
+This serial device can then be used by your **ROS 2 nodes, Arduino communication scripts, or other serial-based applications**.
+
+> **Tip:** If the Arduino is still not detected after following these steps, try a different USB cable, USB port, or USB-to-serial adapter. Some USB cables are designed only for charging and do not provide data communication.
 
 ## 🛠️ Troubleshooting
 
@@ -440,4 +644,3 @@ This project is built on the excellent manipulator design from [AntoBrandi's Rob
 ---
 
 **Happy Hacking!** 🤖🦾🎮🖱️
-# DigitalTwin_ROS2-Manipulator
