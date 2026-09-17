@@ -62,7 +62,7 @@ chmod +x *.sh
 
 4️⃣ **Install additional dependencies:**
 ```bash
-sudo apt update && sudo apt install -y ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial libserial-dev
+sudo apt update && sudo apt install -y ros-humble-joy ros-humble-joint-state-publisher-gui ros-humble-rviz2 python3-serial libserial-dev ros-humble-ros-gz-sim ros-humble-ros-gz && cd ~/digitaltwin_ws && rosdep update && rosdep install --from-paths src --ignore-src -r -y && source /opt/ros/humble/setup.bash && source ~/digitaltwin_ws/install/setup.bash
 ```
 5️⃣ **Build the workspace:**
 ```bash
